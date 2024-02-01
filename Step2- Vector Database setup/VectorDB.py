@@ -2,9 +2,13 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
+import chromadb
+from langchain_community.vectorstores import Chroma
 
-os.environ["OPENAI_API_KEY"] = "Your_openai_api_key"
+os.environ["OPENAI_API_KEY"] = "your-api-key"
 '''You can get your api key from openai website.'''
+
+
 
 '''loding pdf by PyPDFLoader'''
 loader = PyPDFLoader("pdfs\Introduction to Machine Learning with Python ( PDFDrive.com )-min (1) (1).pdf")
@@ -24,10 +28,19 @@ text_splitter = CharacterTextSplitter(
 texts = text_splitter.split_documents(pages)
 
 
-'''Now as our text splitted in and stored in list where each element is 1000 charaters of pdf. now we just 
-the first 1000 charaters and convert them into vectors.'''
-embeddings = OpenAIEmbeddings().embed_query(texts[0].page_content)
-print(embeddings)
+'''embedding model'''
+embeddings = OpenAIEmbeddings()
 
 
-'''Further we will discuss how to embedded this whole pdf and store it to vector data base'''
+
+'''Setting up Chroma VectorDB'''
+db = Chroma.from_documents(texts, OpenAIEmbeddings())
+
+
+
+'''Similarity search on ChromaDB'''
+
+query = "What is Machine learning?"
+embedding_vector = OpenAIEmbeddings().embed_query(query)
+docs = db.similarity_search_by_vector(embedding_vector)
+print(docs[0].page_content)
